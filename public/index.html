@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GenScore Chatbot 💬</title>
+
+<style>
+  :root {
+    /* 🌞 Light Theme Colors */
+    --bg-gradient: linear-gradient(135deg, #a8edea, #fed6e3);
+    --chat-bg: #ffffffcc;
+    --header-bg: linear-gradient(90deg, #89f7fe, #66a6ff);
+    --user-bubble: #a8c0ff;
+    --bot-bubble: #fbc2eb;
+    --text-color: #333;
+    --footer-color: #444;
+  }
+
+  body.dark {
+    /* 🌙 Dark Theme Colors */
+    --bg-gradient: linear-gradient(135deg, #1e3c72, #2a5298);
+    --chat-bg: #1f2937cc;
+    --header-bg: linear-gradient(90deg, #2a5298, #1e3c72);
+    --user-bubble: #4b6cb7;
+    --bot-bubble: #9fa9f1;
+    --text-color: #f3f4f6;
+    --footer-color: #d1d5db;
+  }
+
+  /* Global Layout */
+  body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background: var(--bg-gradient);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.6s ease;
+  }
+
+  /* Chat container */
+  #chat-container {
+    width: 90%;
+    max-width: 600px;
+    height: 85vh;
+    background: var(--chat-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeIn 0.8s ease;
+    transition: background 0.4s ease;
+  }
+
+  /* Header */
+  header {
+    background: var(--header-bg);
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  }
+
+  #theme-toggle {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+
+  #theme-toggle:hover {
+    transform: scale(1.1);
+  }
+
+  /* Chat area */
+  #chat {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-color);
+  }
+
+  .msg {
+    max-width: 80%;
+    margin: 10px 0;
+    padding: 12px 16px;
+    border-radius: 20px;
+    line-height: 1.5;
+    font-size: 15px;
+    word-wrap: break-word;
+    animation: slideUp 0.3s ease;
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: var(--user-bubble);
+    color: #fff;
+    border-bottom-right-radius: 5px;
+  }
+
+  .msg.bot {
+    align-self: flex-start;
+    background: var(--bot-bubble);
+    color: var(--text-color);
+    border-bottom-left-radius: 5px;
+  }
+
+  .timestamp {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    font-style: italic;
+    color: var(--text-color);
+    margin: 10px;
+    font-size: 14px;
+    align-self: flex-start;
+  }
+
+  /* Input */
+  #input-container {
+    display: flex;
+    padding: 15px 20px;
+    border-top: 1px solid #ddd;
+    background: #fafafa22;
+  }
+
+  #input {
+    flex: 1;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 15px;
+    font-size: 16px;
+    background: #fff;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  body.dark #input {
+    background: #374151;
+    color: #f3f4f6;
+  }
+
+  #input:focus {
+    box-shadow: 0 0 0 2px #a8c0ff66;
+  }
+
+  #send {
+    margin-left: 10px;
+    background: var(--header-bg);
+    border: none;
+    color: white;
+    padding: 12px 22px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  #send:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+
+  footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--footer-color);
+    padding: 15px;
+    line-height: 1.5;
+    transition: color 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="chat-container">
+    <header>
+      💬 GenScore Chatbot
+      <button id="theme-toggle" title="Toggle theme">🌙</button>
+    </header>
+
+    <div id="chat"></div>
+
+    <div id="input-container">
+      <input id="input" type="text" placeholder="Type your thoughts..." autocomplete="off" />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <footer>
+    <p><strong>Disclaimer:</strong> This chatbot provides supportive conversations only and is not a substitute for professional therapy or crisis support.</p>
+    <p>If you are in crisis, please contact a mental health professional or local helpline immediately.</p>
+  </footer>
+
+<script>
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  const toggleBtn = document.getElementById('theme-toggle');
+
+  // 🌙 Theme toggle
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  if (currentTheme === 'dark') {
+    document.body.classList.add('dark');
+    toggleBtn.textContent = '☀️';
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    toggleBtn.textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+
+  // ✅ Session ID generator
+  function generateSessionId() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+  }
+
+  let sessionId = localStorage.getItem('sessionId');
+  if (!sessionId) {
+    sessionId = generateSessionId();
+    localStorage.setItem('sessionId', sessionId);
+  }
+
+  function formatTimestamp(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function appendMessage(text, className) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `msg ${className}`;
+
+    const formatted = formatText(text);
+    msgDiv.appendChild(formatted);
+
+    const timestampDiv = document.createElement('div');
+    timestampDiv.className = 'timestamp';
+    timestampDiv.textContent = formatTimestamp(new Date());
+    msgDiv.appendChild(timestampDiv);
+
+    chat.appendChild(msgDiv);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function formatText(text) {
+    const container = document.createDocumentFragment();
+    const lines = text.split('\n');
+    let ul = null;
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (/^[-*]\s+/.test(trimmed)) {
+        if (!ul) ul = document.createElement('ul');
+        const li = document.createElement('li');
+        li.textContent = trimmed.replace(/^[-*]\s+/, '');
+        ul.appendChild(li);
+      } else {
+        if (ul) { container.appendChild(ul); ul = null; }
+        const p = document.createElement('p');
+        p.textContent = trimmed;
+        container.appendChild(p);
+      }
+    });
+    if (ul) container.appendChild(ul);
+    return container;
+  }
+
+  function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.textContent = 'GenScore is typing...';
+    chat.appendChild(typingDiv);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeTypingIndicator() {
+    const typingDiv = document.getElementById('typing-indicator');
+    if (typingDiv) typingDiv.remove();
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendMessage(text, 'user');
+    input.value = '';
+    showTypingIndicator();
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId })
+      });
+
+      removeTypingIndicator();
+
+      if (!res.ok) {
+        appendMessage('Oops, something went wrong!', 'bot');
+        return;
+      }
+
+      const data = await res.json();
+      appendMessage(data.reply, 'bot');
+    } catch (err) {
+      removeTypingIndicator();
+      appendMessage('Network error. Please try again.', 'bot');
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    appendMessage('Hello 🌸 I’m GenScore — your friendly mental health companion. How are you feeling today?', 'bot');
+  });
+</script>
+</body>
+</html>
