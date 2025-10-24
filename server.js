@@ -35,46 +35,73 @@ const openai = new OpenAI({
 
 // Chat endpoint
 app.post("/chat", async (req, res) => {
+  const { message, sessionId } = req.body;
+
   try {
-    const { message, sessionId } = req.body;
-    if (!message || !sessionId) {
-      return res.status(400).json({ reply: "Missing message or sessionId" });
-    }
-
-    // Save user message
-    await saveMessage(sessionId, "user", message);
-
-    // Get last 20 messages from history
-    const history = await getConversation(sessionId, 20);
-
+    // ✅ Fetch past conversation from DB
+    const history = await getConversation(sessionId);
     const messages = [
       {
         role: "system",
-        content: `You are a compassionate mental health chatbot. 
-Respond with empathy, positivity, and understanding. 
-Do NOT offer medical diagnoses or treatment. 
-Encourage seeking professional help when needed.`
+        content: `
+You are "MindEase", a warm, caring mental health support chatbot.
+You speak in a natural, compassionate tone — using English or Nigerian Pidgin based on the user’s message.
+If the user writes in Pidgin, respond naturally in Pidgin.
+If they write in English, reply in clear, simple English.
+
+Guidelines:
+- Always be empathetic and supportive.
+- Avoid clinical or diagnostic language.
+- Encourage healthy coping methods (like rest, talking to friends, breathing, journaling, etc.).
+- If someone sounds very distressed, gently suggest they talk to a mental health professional or trusted person.
+- Keep your replies short, human-like, and conversational.
+- Never suggest or discuss medication or substances.
+
+Example:
+User: I dey feel somehow for body.
+Bot: Sorry to hear say you no too dey okay. You wan gist small make you calm down?
+
+User: I feel really low today.
+Bot: That sounds really hard. I’m here to listen — do you want to talk more about what’s making you feel this way?
+        `,
       },
-      ...history.map((m) => ({ role: m.role, content: m.content })),
+      ...history.map((msg) => ({
+        role: msg.role.toLowerCase() === "user" ? "user" : "assistant",
+        content: msg.content,
+      })),
+      { role: "user", content: message },
     ];
 
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      max_tokens: 200,
-      temperature: 0.7,
+    // ✅ Call OpenAI Chat Completion API
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages,
+        temperature: 0.8, // slightly more expressive
+        max_tokens: 300,
+      }),
     });
 
-    const botReply = completion.choices[0].message.content.trim();
+    const data = await response.json();
+    const botReply =
+      data.choices?.[0]?.message?.content?.trim() ||
+      "I dey here for you. Tell me how your mind dey today.";
 
-    // Save bot reply
-    await saveMessage(sessionId, "assistant", botReply);
+    // ✅ Save both user and bot messages
+    await saveMessage(sessionId, "User", message);
+    await saveMessage(sessionId, "Bot", botReply);
 
     res.json({ reply: botReply });
   } catch (err) {
     console.error("Chat error:", err);
-    res.status(500).json({ reply: "Sorry, something went wrong." });
+    res.status(500).json({
+      reply: "Sorry, e be like say something don go wrong. Make we try again soon.",
+    });
   }
 });
 
