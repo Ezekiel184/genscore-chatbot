@@ -44,7 +44,7 @@ app.post("/chat", async (req, res) => {
       {
         role: "system",
         content: `
-You are "MindEase", a warm, caring mental health support chatbot.
+You are "GenScore", a warm, caring mental health support chatbot.
 You speak in a natural, compassionate tone — using English or Nigerian Pidgin based on the user’s message.
 If the user writes in Pidgin, respond naturally in Pidgin.
 If they write in English, reply in clear, simple English.
@@ -111,8 +111,6 @@ app.get("*", (req, res) => {
 });
 
 app.listen(port, () =>
-  console.log(`✅ MindEase Chatbot running on port ${port}`)
+  console.log(`✅ GenScore Chatbot running on port ${port}`)
 );
-
-console.log("✅ OpenAI key loaded?", !!process.env.OPENAI_API_KEY);
 
