@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import session from "express-session";
 import path from "path";
 import { fileURLToPath } from "url";
-import { initDb, saveMessage, getMessages } from "./db.js";
+import { initDb, saveMessage, getConversation } from "./db.js";
 import OpenAI from "openai";
 
 dotenv.config();
