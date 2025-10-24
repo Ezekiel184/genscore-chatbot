@@ -45,7 +45,7 @@ app.post("/chat", async (req, res) => {
     await saveMessage(sessionId, "user", message);
 
     // Get last 20 messages from history
-    const history = await getMessages(sessionId, 20);
+    const history = await getConversation(sessionId, 20);
 
     const messages = [
       {
