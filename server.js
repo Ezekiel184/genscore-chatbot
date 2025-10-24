@@ -86,3 +86,6 @@ app.get("*", (req, res) => {
 app.listen(port, () =>
   console.log(`✅ MindEase Chatbot running on port ${port}`)
 );
+
+console.log("✅ OpenAI key loaded?", !!process.env.OPENAI_API_KEY);
+
